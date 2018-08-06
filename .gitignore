@@ -1,0 +1,8 @@
+.idea
+logs
+target/
+
+*.sqlite
+*.db
+*.iml
+*.ipr
