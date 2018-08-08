@@ -64,7 +64,7 @@ class ApiController @Inject()(db: Database, cc: ControllerComponents, idGen: Id)
   def gets(page: Int, pageSize: Int) = Action { request =>
     val offset = pageSize * (page - 1)
     db.withConnection { conn =>
-      val ps = conn.prepareStatement("SELECT * FROM Bin ORDER BY id DESC LIMIT ? OFFSET ?")
+      val ps = conn.prepareStatement("SELECT id, timestamp, src FROM Bin ORDER BY rowid DESC LIMIT ? OFFSET ?")
       ps.setObject(1, pageSize)
       ps.setObject(2, offset)
 
@@ -74,7 +74,6 @@ class ApiController @Inject()(db: Database, cc: ControllerComponents, idGen: Id)
         JsObject(Seq(
           "id" -> JsString(rs.getString("id")),
           "timestamp" -> JsString(rs.getString("timestamp")),
-          "data" -> JsString(rs.getString("data")),
           "src" -> JsString(rs.getString("src"))
         ))
       }.toList)
