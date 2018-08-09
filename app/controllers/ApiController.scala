@@ -17,7 +17,7 @@ class ApiController @Inject()(db: Database, cc: ControllerComponents, idGen: Id)
       json.validate[Bin] match {
         case s: JsSuccess[Bin] => {
           db.withConnection { conn =>
-            val ps = conn.prepareStatement("INSERT INTO Bin (id, timestamp, data, src) VALUES (?, ?, ?, ?)")
+            val ps = conn.prepareStatement("INSERT INTO Bin (id, timestamp, data, src, ip) VALUES (?, ?, ?, ?, ?)")
 
             val id: String = idGen.nextId()
 
@@ -25,6 +25,7 @@ class ApiController @Inject()(db: Database, cc: ControllerComponents, idGen: Id)
             ps.setObject(2, iso8601String)
             ps.setObject(3, s.value.data)
             ps.setObject(4, s.value.src)
+            ps.setObject(5, request.remoteAddress)
             ps.executeUpdate()
 
             val rsjs = JsObject(Seq(
