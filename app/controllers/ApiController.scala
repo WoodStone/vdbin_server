@@ -18,18 +18,17 @@ class ApiController @Inject()(db: Database, cc: ControllerComponents, idGen: Id)
         case s: JsSuccess[Bin] => {
           db.withConnection { conn =>
             val ps = conn.prepareStatement("INSERT INTO Bin (id, timestamp, data, src, ip) VALUES (?, ?, ?, ?, ?)")
+            val bin = s.get
 
-            val id: String = idGen.nextId()
-
-            ps.setObject(1, id)
-            ps.setObject(2, iso8601String)
-            ps.setObject(3, s.value.data)
-            ps.setObject(4, s.value.src)
+            ps.setObject(1, bin.id)
+            ps.setObject(2, bin.timestamp)
+            ps.setObject(3, bin.data)
+            ps.setObject(4, bin.src)
             ps.setObject(5, request.remoteAddress)
             ps.executeUpdate()
 
             val rsjs = JsObject(Seq(
-              "id" -> JsString(id)
+              "id" -> JsString(bin.id)
             ))
             Ok(rsjs)
           }
@@ -49,11 +48,11 @@ class ApiController @Inject()(db: Database, cc: ControllerComponents, idGen: Id)
       ps.setObject(1, id)
       val rs = ps.executeQuery()
       if (rs.next()) {
-        val jsrs = JsObject(Seq(
-          "id" -> JsString(rs.getString("id")),
-          "timestamp" -> JsString(rs.getString("timestamp")),
-          "data" -> JsString(rs.getString("data")),
-          "src" -> JsString(rs.getString("src"))
+        val jsrs = Json.toJson(Bin(
+          rs.getString("id"),
+          rs.getString("timestamp"),
+          rs.getString("data"),
+          rs.getString("src")
         ))
         Ok(jsrs)
       } else {
@@ -83,12 +82,21 @@ class ApiController @Inject()(db: Database, cc: ControllerComponents, idGen: Id)
     }
   }
 
-  case class Bin(data: String, src: String)
+  case class Bin(id: String, timestamp: String, data: String, src: String)
 
   implicit val binRead: Reads[Bin] = (
-    (JsPath \ "data").read[String] and
-    (JsPath \ "src").read[String]
+      (JsPath \ "id").readWithDefault[String](idGen.nextId()) and
+      (JsPath \ "timestamp").readWithDefault[String](iso8601String) and
+      (JsPath \ "data").read[String] and
+      (JsPath \ "src").read[String]
   )(Bin.apply _)
+
+  implicit val binWrite: Writes[Bin] = (
+    (JsPath \ "id").write[String] and
+    (JsPath \ "timestamp").write[String] and
+    (JsPath \ "data").write[String] and
+    (JsPath \ "src").write[String]
+  )(unlift(Bin.unapply))
 
   def iso8601String: String = {
     val now: Date = new Date()
