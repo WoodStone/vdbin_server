@@ -6,3 +6,12 @@
 POST    /bin                            controllers.ApiController.post
 GET     /bin/:uuid                      controllers.ApiController.get(uuid)
 GET     /bin                            controllers.ApiController.gets(page: Int ?= 1, per: Int ?= 50)
+DELETE  /bin/:uuid                      controllers.ApiController.delete(uuid)
+
+GET     /login                          controllers.ApiController.login(r: String ?= "")
+GET     /check                          controllers.ApiController.check
+
+GET     /callback                   @org.pac4j.play.CallbackController.callback()
+POST    /callback                   @org.pac4j.play.CallbackController.callback()
+GET     /logout                     @org.pac4j.play.LogoutController.logout()
+GET     /centralLogout              controllers.CentralLogoutController.logout()
